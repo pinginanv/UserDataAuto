@@ -1,6 +1,7 @@
 import org.junit.*;
 import org.junit.runners.MethodSorters;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.firefox.FirefoxDriver;
@@ -9,7 +10,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 
 import java.util.List;
 
-@FixMethodOrder(MethodSorters.DEFAULT)
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class Main {
     private static WebDriver webDriver;
     private static User user;
@@ -18,23 +19,25 @@ public class Main {
     @BeforeClass
     public static void beforeAll() {
         System.setProperty("webdriver.gecko.driver", "C:\\Projects\\Drivers\\geckodriver.exe");
-        user = RandomUser.generateUser();
-        //user = RandomUser.generateDuplicated();
+        user = RandomUser.generateCorrectUser(); //all tests should pass
+        //user = RandomUser.generateExisting(); //for test purpose Registration test should fail, rest pass
+       //user = RandomUser.generateWrongUser(); //for test purpose All tests should fail
         webDriver = new FirefoxDriver();
+
     }
 
     @AfterClass
     public static void afterAll() {
-         webDriver.quit();
+           webDriver.quit();
     }
 
     @Before
     public void beforeEach() {
-        wait = new WebDriverWait(webDriver, 2000);
+        wait = new WebDriverWait(webDriver, 4, 2000);
     }
 
     @Test
-     public void RegisterUniqueUser() {
+    public void A_RegisterUniqueUser() {
 
         webDriver.get("https://user-data.hillel.it/html/registration.html");
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("registration")));
@@ -68,10 +71,12 @@ public class Main {
 
         Assert.assertEquals("Registration failed with error: " + result, "Successful registration", result);
 
+
+
     }
 
     @Test
-     public void LoginUser() {
+    public void B_LoginUser() {
         webDriver.get("https://user-data.hillel.it/html/registration.html");
         wait.until(ExpectedConditions.visibilityOfElementLocated(By.className("authorization")));
         webDriver.findElement(By.className("authorization")).click();
@@ -79,7 +84,12 @@ public class Main {
         webDriver.findElement(By.id("email")).sendKeys(user.getEmail());
         webDriver.findElement(By.className("login_button")).click();
 
-        wait.until(ExpectedConditions.urlMatches("https://user-data.hillel.it/index.html"));
+
+        try {
+            wait.until(ExpectedConditions.urlMatches("https://user-data.hillel.it/index.html"));
+        } catch (TimeoutException e) {
+            System.out.println("wait finished with TimeOut: " + e.getMessage() + " : " + e.getCause());
+        }
 
         String result = webDriver.getCurrentUrl();
         System.out.println(webDriver.getCurrentUrl());
@@ -88,14 +98,27 @@ public class Main {
     }
 
     @Test
-      public void searchCreatedUser() {
+    public void C_searchUser() {
         Boolean result = false;
         webDriver.get("https://user-data.hillel.it/index.html");
+
+        try {
+            if (wait.until(ExpectedConditions.alertIsPresent()) != null) {
+                System.out.println("alert present");
+                System.out.println(webDriver.switchTo().alert().getText());
+                webDriver.switchTo().alert().accept();
+            }
+        } catch (TimeoutException e) {
+            System.out.println("wait finished with TimeOut: " + e.getMessage() + " : " + e.getCause());
+        }
+
+
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.id("employees")));
         webDriver.findElement(By.id("employees")).click();
         List<WebElement> tds = webDriver.findElements(By.cssSelector("td"));
         for (WebElement td : tds) {
 
-            if (td.getText().equals(user.getEmail())){
+            if (td.getText().equals(user.getEmail())) {
                 result = true;
                 System.out.println("found: " + td.getText());
             }

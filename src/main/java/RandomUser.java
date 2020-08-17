@@ -3,12 +3,16 @@ import java.util.Random;
 
 public class RandomUser {
 
-    //for test purpose generation of existing user to make it failing
-    public static User generateDuplicated() {
+    //for test purpose generation of existing user with wrong password to make it failing
+    public static User generateExisting() {
         return new User("blelosyc", "qbi", "526702604", "380915341624", "blelosyc.qbi@mail.ua", "MyPass12345", gender(), position());
     }
+    //for test purpose generation of wrong user with wrong Name to make it failing
+    public static User generateWrongUser() {
+        return new User("b", "qbi", "526702604", "380915341624", "new.wrong@mail.ua", "MyPass123456", gender(), position());
+    }
 
-    public static User generateUser() {
+    public static User generateCorrectUser() {
 
         String firstName = firstName();
         String lastName = lastName();
